@@ -1,0 +1,28 @@
+{{#> layout title="Games"}}
+  <ul class="games-list">
+    {{#each games}}
+    <li class="game-card">
+      <a href="/games/{{this.id}}">
+        {{#if this.background_image}}
+        <img src="{{this.background_image}}" alt="{{this.name}}">
+        {{/if}}
+        <div class="game-card__info">
+          <span class="game-card__name">{{this.name}}</span>
+          <span class="game-card__rating">⭐ {{this.rating}}</span>
+        </div>
+      </a>
+    </li>
+    {{/each}}
+  </ul>
+
+
+  <nav class="pagination">
+    {{#if (gt page 1)}}
+    <a href="/?page={{subtract page 1}}">← Prev</a>
+    {{/if}}
+    <span>Page {{page}}</span>
+    {{#if hasNext}}
+    <a href="/?page={{add page 1}}">Next →</a>
+    {{/if}}
+  </nav>
+{{/layout}}
