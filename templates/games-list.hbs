@@ -4,7 +4,7 @@
     <li class="game-card">
       <a href="/games/{{this.id}}">
         {{#if this.background_image}}
-        <img src="{{this.background_image}}" alt="{{this.name}}">
+        <img src="{{rawgImage this.background_image 420}}" alt="{{this.name}}">
         {{/if}}
         <div class="game-card__info">
           <span class="game-card__name">{{this.name}}</span>
@@ -18,11 +18,11 @@
 
   <nav class="pagination">
     {{#if (gt page 1)}}
-    <a href="/?page={{subtract page 1}}">← Prev</a>
+    <a href="/?{{#if query}}q={{query}}&{{/if}}{{#if ordering}}ordering={{ordering}}&{{/if}}{{#if genres}}genres={{genres}}&{{/if}}page={{subtract page 1}}" data-page="{{subtract page 1}}">← Prev</a>
     {{/if}}
     <span>Page {{page}}</span>
     {{#if hasNext}}
-    <a href="/?page={{add page 1}}">Next →</a>
+    <a href="/?{{#if query}}q={{query}}&{{/if}}{{#if ordering}}ordering={{ordering}}&{{/if}}{{#if genres}}genres={{genres}}&{{/if}}page={{add page 1}}" data-page="{{add page 1}}">Next →</a>
     {{/if}}
   </nav>
 {{/layout}}

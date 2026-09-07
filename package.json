@@ -5,9 +5,10 @@
   "main": "dist/server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc",
+    "build:client": "esbuild client/app.ts --bundle --outfile=public/app.js --target=es2022 --loader:.hbs=text",
+    "build": "npm run build:client && tsc",
     "start": "node --env-file=.env.local dist/server.js",
-    "dev": "tsx watch --env-file=.env.local server.ts"
+    "dev": "npm run build:client -- --watch & tsx watch --env-file=.env.local server.ts"
   },
   "keywords": [],
   "author": "",
@@ -15,10 +16,12 @@
   "type": "commonjs",
   "dependencies": {
     "better-sqlite3": "^12.11.1",
+    "express": "^5.2.1",
     "handlebars": "^4.7.9"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
+    "@types/express": "^5.0.6",
     "@types/node": "^26.1.0",
     "tsx": "^4.23.0",
     "typescript": "^6.0.3"

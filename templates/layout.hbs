@@ -9,11 +9,54 @@
 <body>
   <header>
     <a href="/">RAWG Games</a>
-    <a href="/favorites">Favorites</a>
-    <form action="/search" method="GET">
-      <input type="text" name="q" placeholder="Search games...">
-      <button type="submit">Search</button>
-    </form>
+    <div class="header__right">
+      <a href="/favorites">Favorites</a>
+      {{#if user}}
+        <img src="https://cdn.discordapp.com/avatars/{{user.id}}/{{user.avatar}}.png" alt="" class="user-avatar">
+        <span class="header__username">{{user.username}}</span>
+        <a href="/auth/logout">Logout</a>
+      {{else}}
+        <a href="/auth/discord/login">Login</a>
+      {{/if}}
+    </div>
+    <div class="header__left">
+      <form action="/" method="GET" class="search-form">
+        <input type="text" name="q" value="{{query}}" placeholder="Search games..." class="search-form__input">
+        {{#if ordering}}<input type="hidden" name="ordering" value="{{ordering}}">{{/if}}
+        {{#if genres}}<input type="hidden" name="genres" value="{{genres}}">{{/if}}
+        {{#if showSearchButton}}
+        <button type="submit" class="search-form__button">Search</button>
+        {{/if}}
+      </form>
+      {{#if showFilters}}
+      <form action="/" method="GET" class="filters-form">
+        <input type="hidden" name="q" value="{{query}}">
+        <select name="ordering" class="filters-form__select">
+          <option value="" {{#unless ordering}}selected{{/unless}}>Sort: Relevance</option>
+          <option value="-released" {{#if (eq ordering "-released")}}selected{{/if}}>Newest release</option>
+          <option value="released" {{#if (eq ordering "released")}}selected{{/if}}>Oldest release</option>
+          <option value="-rating" {{#if (eq ordering "-rating")}}selected{{/if}}>Rating: high to low</option>
+          <option value="name" {{#if (eq ordering "name")}}selected{{/if}}>Name: A-Z</option>
+          <option value="-metacritic" {{#if (eq ordering "-metacritic")}}selected{{/if}}>Metacritic: high to low</option>
+        </select>
+        <select name="genres" class="filters-form__select">
+          <option value="" {{#unless genres}}selected{{/unless}}>All genres</option>
+          <option value="action" {{#if (eq genres "action")}}selected{{/if}}>Action</option>
+          <option value="indie" {{#if (eq genres "indie")}}selected{{/if}}>Indie</option>
+          <option value="adventure" {{#if (eq genres "adventure")}}selected{{/if}}>Adventure</option>
+          <option value="rpg" {{#if (eq genres "rpg")}}selected{{/if}}>RPG</option>
+          <option value="strategy" {{#if (eq genres "strategy")}}selected{{/if}}>Strategy</option>
+          <option value="shooter" {{#if (eq genres "shooter")}}selected{{/if}}>Shooter</option>
+          <option value="casual" {{#if (eq genres "casual")}}selected{{/if}}>Casual</option>
+          <option value="simulation" {{#if (eq genres "simulation")}}selected{{/if}}>Simulation</option>
+          <option value="puzzle" {{#if (eq genres "puzzle")}}selected{{/if}}>Puzzle</option>
+          <option value="racing" {{#if (eq genres "racing")}}selected{{/if}}>Racing</option>
+          <option value="sports" {{#if (eq genres "sports")}}selected{{/if}}>Sports</option>
+          <option value="fighting" {{#if (eq genres "fighting")}}selected{{/if}}>Fighting</option>
+        </select>
+      </form>
+      {{/if}}
+    </div>
   </header>
 
   <main>
@@ -23,5 +66,7 @@
   <footer>
     <span>Powered by RAWG API</span>
   </footer>
+
+  <script src="/app.js" defer></script>
 </body>
 </html>

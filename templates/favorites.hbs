@@ -4,7 +4,7 @@
     <li class="favorite-card">
       <a href="/games/{{this.rawg_id}}">
         {{#if this.background_image}}
-        <img src="{{this.background_image}}" alt="{{this.name}}">
+        <img src="{{rawgImage this.background_image 420}}" alt="{{this.name}}">
         {{/if}}
         <div class="game-card__info">
           <span class="game-card__name">{{this.name}}</span>
