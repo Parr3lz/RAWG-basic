@@ -99,9 +99,16 @@ function requireAuth(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
+function requireApiAuth(req: Request, res: Response, next: NextFunction) {
+  if (!req.user) {
+    res.status(401).json({ message: 'Unauthorized' });
+    return;
+  }
+  next();
+}
+
 const app = express();
 
-app.use(express.urlencoded({ extended: false }));
 app.use(express.static('public'));
 app.use((req, res, next) => {
   req.user = getCurrentUser(req);
@@ -153,6 +160,39 @@ app.get('/api/games/:id', async (req, res) => {
   }
 });
 
+app.post('/api/favorites/:id', requireApiAuth, async (req, res) => {
+  const id = String(req.params.id);
+  try {
+    const game = await fetchGame(id);
+    addFavorite({
+      id: game.id,
+      slug: game.slug,
+      name: game.name,
+      background_image: game.background_image,
+      rating: game.rating,
+      released: game.released,
+      playtime: game.playtime,
+    }, req.user.id);
+    res.json({ favorited: true });
+  } catch (error) {
+    if (isStatusError(error, 400)) {
+      res.status(400).json({ message: 'Invalid request' });
+      return;
+    }
+    if (isStatusError(error, 404)) {
+      res.status(404).json({ message: 'Not found' });
+      return;
+    }
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.delete('/api/favorites/:id', requireApiAuth, (req, res) => {
+  removeFavorite(String(req.params.id), req.user.id);
+  res.json({ favorited: false });
+});
+
 app.get('/', (req, res) => {
   const page = (req.query.page as string) || '1';
   const query = (req.query.q as string) || '';
@@ -186,26 +226,6 @@ app.get('/favorites', requireAuth, (req, res) => {
   const favorites = getFavorites(req.user.id);
   const html = favoritesTemplate({ favorites, user: req.user });
   res.send(html);
-});
-
-app.post('/favorites/add', requireAuth, (req, res) => {
-  const body = req.body;
-  addFavorite({
-    id: Number(body.game_id),
-    slug: body.game_slug,
-    name: body.game_name ?? '',
-    background_image: body.game_background_image,
-    rating: body.game_rating ? Number(body.game_rating) : null,
-    released: body.game_released,
-    playtime: body.game_playtime ? Number(body.game_playtime) : null,
-  }, req.user.id);
-  res.redirect(`/games/${body.game_id}?toast=added`);
-});
-
-app.post('/favorites/remove', requireAuth, (req, res) => {
-  const gameId = req.body.game_id ?? '';
-  removeFavorite(gameId, req.user.id);
-  res.redirect(`/games/${gameId}?toast=removed`);
 });
 
 app.get('/auth/discord/login', (req, res) => {
@@ -254,13 +274,7 @@ app.get('/auth/logout', (req, res) => {
 });
 
 app.get('/games/:id', (req, res) => {
-  const toastParam = req.query.toast;
-  const toastMessage = toastParam === 'added'
-    ? 'Game successfully added to Favorites!'
-    : toastParam === 'removed'
-      ? 'Game successfully removed from Favorites!'
-      : null;
-  const html = gameDetailsTemplate({ toastMessage, user: req.user, showSearchButton: true });
+  const html = gameDetailsTemplate({ user: req.user, showSearchButton: true });
   res.send(html);
 });
 

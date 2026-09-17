@@ -1,21 +1,3 @@
 {{#> layout title="Game"}}
   <div class="game-detail"{{#if user}} data-authenticated="true"{{/if}}></div>
-
-  {{#if toastMessage}}
-  <div class="toast" id="toast">{{toastMessage}}</div>
-  <script>
-    (function () {
-      var toast = document.getElementById('toast');
-      requestAnimationFrame(function () { toast.classList.add('toast--show'); });
-      setTimeout(function () {
-        toast.classList.remove('toast--show');
-        setTimeout(function () { toast.remove(); }, 300);
-      }, 3000);
-
-      var url = new URL(window.location.href);
-      url.searchParams.delete('toast');
-      window.history.replaceState({}, '', url);
-    })();
-  </script>
-  {{/if}}
 {{/layout}}

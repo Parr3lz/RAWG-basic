@@ -1,28 +1,4 @@
 {{#> layout title="Games"}}
-  <ul class="games-list">
-    {{#each games}}
-    <li class="game-card">
-      <a href="/games/{{this.id}}">
-        {{#if this.background_image}}
-        <img src="{{rawgImage this.background_image 420}}" alt="{{this.name}}">
-        {{/if}}
-        <div class="game-card__info">
-          <span class="game-card__name">{{this.name}}</span>
-          <span class="game-card__rating">⭐ {{this.rating}}</span>
-        </div>
-      </a>
-    </li>
-    {{/each}}
-  </ul>
-
-
-  <nav class="pagination">
-    {{#if (gt page 1)}}
-    <a href="/?{{#if query}}q={{query}}&{{/if}}{{#if ordering}}ordering={{ordering}}&{{/if}}{{#if genres}}genres={{genres}}&{{/if}}page={{subtract page 1}}" data-page="{{subtract page 1}}">← Prev</a>
-    {{/if}}
-    <span>Page {{page}}</span>
-    {{#if hasNext}}
-    <a href="/?{{#if query}}q={{query}}&{{/if}}{{#if ordering}}ordering={{ordering}}&{{/if}}{{#if genres}}genres={{genres}}&{{/if}}page={{add page 1}}" data-page="{{add page 1}}">Next →</a>
-    {{/if}}
-  </nav>
+  <ul class="games-list"></ul>
+  <nav class="pagination"></nav>
 {{/layout}}
