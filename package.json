@@ -6,9 +6,10 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build:client": "esbuild client/app.ts --bundle --outfile=public/app.js --target=es2022",
-    "build": "npm run build:client && tsc",
+    "build": "npm run typecheck:client && npm run build:client && tsc",
     "start": "node --env-file=.env.local dist/server.js",
-    "dev": "npm run build:client -- --watch & tsx watch --env-file=.env.local server.ts"
+    "dev": "npm run build:client -- --watch & tsx watch --env-file=.env.local server.ts",
+    "typecheck:client": "tsc --project tsconfig.client.json"
   },
   "keywords": [],
   "author": "",

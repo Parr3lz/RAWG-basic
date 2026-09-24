@@ -1,17 +1,3 @@
 {{#> layout title="Favorites"}}
-  <ul class="favorites-list">   
-    {{#each favorites}}
-    <li class="favorite-card">
-      <a href="/games/{{this.rawg_id}}">
-        {{#if this.background_image}}
-        <img src="{{rawgImage this.background_image 420}}" alt="{{this.name}}">
-        {{/if}}
-        <div class="game-card__info">
-          <span class="game-card__name">{{this.name}}</span>
-          <span class="game-card__rating">⭐ {{this.rating}}</span>
-        </div>
-      </a>
-    </li>
-    {{/each}}
-  </ul>
+  <div id="app"{{#if user}} data-authenticated="true"{{/if}}></div>
 {{/layout}}

@@ -8,7 +8,6 @@ import { parseCookies } from './auth';
 import Handlebars from 'handlebars';
 import fs from 'fs';
 import { getFavorites, addFavorite, removeFavorite, isFavorite } from './db';
-import { rawgImage } from './utils';
 
 declare global {
   namespace Express {
@@ -18,11 +17,7 @@ declare global {
   }
 }
 
-Handlebars.registerHelper('gt', (a: number, b: number) => a > b);
-Handlebars.registerHelper('add', (a: number, b: number) => a + b);
-Handlebars.registerHelper('subtract', (a: number, b: number) => a - b);
 Handlebars.registerHelper('eq', (a: unknown, b: unknown) => a === b);
-Handlebars.registerHelper('rawgImage', rawgImage);
 
 Handlebars.registerPartial('layout', fs.readFileSync('./templates/layout.hbs', 'utf-8'));
 
@@ -160,6 +155,16 @@ app.get('/api/games/:id', async (req, res) => {
   }
 });
 
+app.get('/api/favorites', requireApiAuth, (req, res) => {
+  const favorites = getFavorites(req.user.id).map((game) => ({
+    id: game.rawg_id,
+    name: game.name,
+    background_image: game.background_image,
+    rating: game.rating,
+  }));
+  res.json(favorites);
+});
+
 app.post('/api/favorites/:id', requireApiAuth, async (req, res) => {
   const id = String(req.params.id);
   try {
@@ -194,15 +199,10 @@ app.delete('/api/favorites/:id', requireApiAuth, (req, res) => {
 });
 
 app.get('/', (req, res) => {
-  const page = (req.query.page as string) || '1';
   const query = (req.query.q as string) || '';
   const ordering = (req.query.ordering as string) || '';
   const genres = (req.query.genres as string) || '';
   const html = gamesListTemplate({
-    games: [],
-    page: Number(page),
-    hasNext: false,
-    hasPrev: false,
     query,
     ordering,
     genres,
@@ -223,8 +223,7 @@ app.get('/search', (req, res) => {
 });
 
 app.get('/favorites', requireAuth, (req, res) => {
-  const favorites = getFavorites(req.user.id);
-  const html = favoritesTemplate({ favorites, user: req.user });
+  const html = favoritesTemplate({ user: req.user });
   res.send(html);
 });
 
