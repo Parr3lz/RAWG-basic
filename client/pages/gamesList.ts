@@ -1,17 +1,26 @@
 import { requestJson } from '../shared/api';
 import { createGameCard } from '../shared/createGameCard';
+import { createLink } from '../shared/createLink';
 import { showToast } from '../shared/showToast';
 import type { Game, GamesPage } from '../shared/types';
 
-export function gamesListPage(element: HTMLElement): void {
+type GamesListDependencies = {
+  searchForm: HTMLFormElement;
+  filtersForm: HTMLFormElement | null;
+};
+
+export function gamesListPage(
+  element: HTMLElement,
+  dependencies: GamesListDependencies,
+): void {
   const gamesList = document.createElement('ul');
   gamesList.className = 'games-list';
   const pagination = document.createElement('nav');
   pagination.className = 'pagination';
   element.replaceChildren(gamesList, pagination);
 
-  const form = document.querySelector('.search-form');
-  const filtersForm = document.querySelector('.filters-form');
+  const form = dependencies.searchForm;
+  const filtersForm = dependencies.filtersForm;
   const params = new URLSearchParams(location.search);
   let currentQuery = params.get('q') || '';
   let currentOrdering = params.get('ordering') || '';
@@ -40,10 +49,8 @@ export function gamesListPage(element: HTMLElement): void {
   }
 
   function createPaginationLink(label: string, page: number, data: GamesPage) {
-    const link = document.createElement('a');
-    link.href = buildListUrl(page, data.query, data.ordering, data.genres);
+    const link = createLink(buildListUrl(page, data.query, data.ordering, data.genres), label);
     link.dataset.page = String(page);
-    link.textContent = label;
     return link;
   }
 
@@ -138,4 +145,3 @@ export function gamesListPage(element: HTMLElement): void {
 
   loadPage(initialPage, currentQuery, currentOrdering, currentGenres);
 }
-

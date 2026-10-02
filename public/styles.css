@@ -37,6 +37,10 @@ header a[href="/"] {
 .header__right {
   grid-column: 3;
   justify-self: end;
+}
+
+.header__right,
+.account {
   display: flex;
   align-items: center;
   gap: 16px;
@@ -46,14 +50,16 @@ header a[href="/"] {
   font-size: 1.2rem;
 }
 
-.user-avatar {
+.user-avatar,
+.account__avatar {
   width: 36px;
   height: 36px;
   border-radius: 50%;
   object-fit: cover;
 }
 
-.header__username {
+.header__username,
+.account__username {
   color: #e0e0e0;
   font-size: 1rem;
 }

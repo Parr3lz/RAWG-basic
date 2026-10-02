@@ -17,8 +17,6 @@ declare global {
   }
 }
 
-Handlebars.registerHelper('eq', (a: unknown, b: unknown) => a === b);
-
 Handlebars.registerPartial('layout', fs.readFileSync('./templates/layout.hbs', 'utf-8'));
 
 const gamesListTemplate = Handlebars.compile(fs.readFileSync('./templates/games-list.hbs', 'utf-8'));
@@ -110,6 +108,20 @@ app.use((req, res, next) => {
   next();
 });
 
+app.get('/api/me', (req, res) => {
+  res.set('Cache-Control', 'no-store');
+
+  res.json({
+    user: req.user
+      ? {
+          id: req.user.id,
+          username: req.user.username,
+          avatar: req.user.avatar,
+        }
+      : null,
+  });
+});
+
 app.get('/api/games', async (req, res) => {
   const page = (req.query.page as string) || '1';
   const query = (req.query.q as string) || '';
@@ -199,16 +211,7 @@ app.delete('/api/favorites/:id', requireApiAuth, (req, res) => {
 });
 
 app.get('/', (req, res) => {
-  const query = (req.query.q as string) || '';
-  const ordering = (req.query.ordering as string) || '';
-  const genres = (req.query.genres as string) || '';
-  const html = gamesListTemplate({
-    query,
-    ordering,
-    genres,
-    user: req.user,
-    showFilters: true,
-  });
+  const html = gamesListTemplate({ user: req.user });
   res.send(html);
 });
 
@@ -273,7 +276,7 @@ app.get('/auth/logout', (req, res) => {
 });
 
 app.get('/games/:id', (req, res) => {
-  const html = gameDetailsTemplate({ user: req.user, showSearchButton: true });
+  const html = gameDetailsTemplate({ user: req.user });
   res.send(html);
 });
 

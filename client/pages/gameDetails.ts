@@ -1,4 +1,5 @@
 import { requestJson } from '../shared/api';
+import { createLink } from '../shared/createLink';
 import { rawgImage } from '../shared/rawgImage';
 import { showToast } from '../shared/showToast';
 import type { GameDetail, GameDetailResponse } from '../shared/types';
@@ -60,10 +61,7 @@ export function gameDetailsPage(element: HTMLElement): void {
 
   function createFavoriteControl(game: GameDetail, favorited: boolean) {
     if (!authenticated) {
-      const link = document.createElement('a');
-      link.href = '/auth/discord/login';
-      link.textContent = 'Login to add to Favorites';
-      return link;
+      return createLink('/auth/discord/login', 'Login to add to Favorites');
     }
 
     const button = document.createElement('button');
@@ -155,4 +153,3 @@ export function gameDetailsPage(element: HTMLElement): void {
 
   loadGame();
 }
-
