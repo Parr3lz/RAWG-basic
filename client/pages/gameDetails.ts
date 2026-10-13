@@ -28,7 +28,9 @@ function createTagRow(className: string, caption: string, labels: string[]) {
   return row;
 }
 
-export function gameDetailsPage(element: HTMLElement): void {
+export function gameDetailsPage(element: HTMLElement): () => void {
+  const controller = new AbortController();
+  const { signal } = controller;
   const root = document.createElement('div');
   root.className = 'game-detail';
   element.replaceChildren(root);
@@ -41,21 +43,25 @@ export function gameDetailsPage(element: HTMLElement): void {
   }
 
   async function toggleFavorite(button: HTMLButtonElement, gameId: number) {
+    if (signal.aborted) return;
     const favorited = button.dataset.favorited === 'true';
     button.disabled = true;
     try {
       const data = await requestJson<{ favorited: boolean }>(`/api/favorites/${encodeURIComponent(String(gameId))}`, {
         method: favorited ? 'DELETE' : 'POST',
+        signal,
       });
+      if (signal.aborted) return;
       setFavoriteState(button, data.favorited);
       showToast(favorited
         ? 'Game successfully removed from Favorites!'
         : 'Game successfully added to Favorites!');
     } catch (err) {
+      if (signal.aborted) return;
       console.error('Не удалось обновить Favorites:', err);
       showToast('Не удалось обновить Favorites');
     } finally {
-      button.disabled = false;
+      if (!signal.aborted) button.disabled = false;
     }
   }
 
@@ -69,7 +75,7 @@ export function gameDetailsPage(element: HTMLElement): void {
     button.className = 'favorite-button';
     button.dataset.testid = 'favorite-toggle';
     setFavoriteState(button, favorited);
-    button.addEventListener('click', () => toggleFavorite(button, game.id));
+    button.addEventListener('click', () => toggleFavorite(button, game.id), { signal });
     return button;
   }
 
@@ -143,13 +149,21 @@ export function gameDetailsPage(element: HTMLElement): void {
     const match = location.pathname.match(/^\/games\/([^/]+)\/?$/i);
     if (!match) return;
     try {
-      const data = await requestJson<GameDetailResponse>(`/api/games/${encodeURIComponent(match[1])}`);
+      const data = await requestJson<GameDetailResponse>(`/api/games/${encodeURIComponent(match[1])}`, { signal });
+      if (signal.aborted) return;
       renderGame(data);
     } catch (err) {
+      if (signal.aborted) return;
       console.error('Не удалось загрузить игру:', err);
       root.textContent = err instanceof Error ? err.message : 'Не удалось загрузить игру';
     }
   }
 
   loadGame();
+
+  return () => {
+    if (signal.aborted) return;
+    controller.abort();
+    root.remove();
+  };
 }
