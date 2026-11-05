@@ -1,6 +1,7 @@
 node_modules/
 dist/
 public/app.js
+public/react/
 .env.local
 favorites.db
 .claude/settings.local.json

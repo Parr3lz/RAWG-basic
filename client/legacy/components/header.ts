@@ -8,16 +8,25 @@ type HeaderOptions = {
   query: string;
   ordering: string;
   genres: string;
-  showFilters: boolean;
-  showSearchButton: boolean;
 };
 
 type HeaderDependencies = { getCurrentUser: () => Promise<User | null> };
 
 export type Header = {
   element: HTMLElement;
-  searchForm: HTMLFormElement;
-  filtersForm: HTMLFormElement | null;
+  search: {
+    form: HTMLFormElement;
+    input: HTMLInputElement;
+    button: HTMLButtonElement;
+    ordering: HTMLInputElement;
+    genres: HTMLInputElement;
+  };
+  filters: {
+    form: HTMLFormElement;
+    query: HTMLInputElement;
+    ordering: HTMLSelectElement;
+    genres: HTMLSelectElement;
+  };
 };
 
 export function createHeader(options: HeaderOptions, dependencies: HeaderDependencies): Header {
@@ -27,14 +36,13 @@ export function createHeader(options: HeaderOptions, dependencies: HeaderDepende
   const account = createAccount(dependencies.getCurrentUser);
   navigation.append(createLink(paths.favorites, 'Favorites'), account);
 
-  const searchForm = createSearchForm(options);
-  const filtersForm = options.showFilters ? createFiltersForm(options) : null;
+  const search = createSearchForm(options);
+  const filters = createFiltersForm(options);
   const searchControls = Object.assign(document.createElement('div'), { className: 'header__left' });
-  searchControls.append(searchForm);
-  if (filtersForm) searchControls.append(filtersForm);
+  searchControls.append(search.form, filters.form);
 
   element.append(createLink(paths.games(), 'RAWG Games'), navigation, searchControls);
-  return { element, searchForm, filtersForm };
+  return { element, search, filters };
 }
 
 export function mountHeader(root: HTMLElement): (route: Route | undefined) => void {
@@ -43,39 +51,34 @@ export function mountHeader(root: HTMLElement): (route: Route | undefined) => vo
     query: params.get('q') ?? '',
     ordering: params.get('ordering') ?? '',
     genres: params.get('genres') ?? '',
-    showFilters: true,
-    showSearchButton: true,
   }, { getCurrentUser });
   root.replaceChildren(header.element);
 
-  const searchInput = header.searchForm.querySelector<HTMLInputElement>('input[name="q"]');
-  const searchButton = header.searchForm.querySelector<HTMLButtonElement>('button[type="submit"]');
-  const orderingSelect = header.filtersForm?.querySelector<HTMLSelectElement>('select[name="ordering"]');
-  const genresSelect = header.filtersForm?.querySelector<HTMLSelectElement>('select[name="genres"]');
+  const { search, filters } = header;
   let searchTimer: ReturnType<typeof setTimeout> | undefined;
 
   function navigateToGames(): void {
     navigate(paths.games({
-      query: searchInput?.value,
-      ordering: orderingSelect?.value,
-      genres: genresSelect?.value,
+      query: search.input.value,
+      ordering: filters.ordering.value,
+      genres: filters.genres.value,
     }));
   }
 
-  header.searchForm.addEventListener('submit', (event) => {
+  search.form.addEventListener('submit', (event) => {
     event.preventDefault();
     navigateToGames();
   });
 
-  searchInput?.addEventListener('input', () => {
+  search.input.addEventListener('input', () => {
     clearTimeout(searchTimer);
     if (location.pathname === paths.games()) {
       searchTimer = setTimeout(navigateToGames, 300);
     }
   });
 
-  header.filtersForm?.addEventListener('change', navigateToGames);
-  header.filtersForm?.addEventListener('submit', (event) => {
+  filters.form.addEventListener('change', navigateToGames);
+  filters.form.addEventListener('submit', (event) => {
     event.preventDefault();
     navigateToGames();
   });
@@ -84,50 +87,39 @@ export function mountHeader(root: HTMLElement): (route: Route | undefined) => vo
     clearTimeout(searchTimer);
     const params = new URLSearchParams(location.search);
 
-    for (const form of [header.searchForm, header.filtersForm]) {
-      for (const name of ['q', 'ordering', 'genres']) {
-        const control = form?.elements.namedItem(name);
-        if (control instanceof HTMLInputElement || control instanceof HTMLSelectElement) {
-          control.value = params.get(name) ?? '';
-          if (control instanceof HTMLSelectElement && control.selectedIndex === -1) {
-            control.selectedIndex = 0;
-          }
-        }
-      }
-    }
+    search.input.value = params.get('q') ?? '';
+    filters.query.value = search.input.value;
+    search.ordering.value = params.get('ordering') ?? '';
+    search.genres.value = params.get('genres') ?? '';
+    setSelectValue(filters.ordering, search.ordering.value);
+    setSelectValue(filters.genres, search.genres.value);
 
-    if (header.filtersForm) header.filtersForm.style.display = route?.showFilters ? '' : 'none';
-    if (searchButton) searchButton.hidden = !route?.showSearchButton;
+    filters.form.style.display = route?.showFilters ? '' : 'none';
+    search.button.hidden = !route?.showSearchButton;
   };
 }
 
-function createSearchForm(options: HeaderOptions): HTMLFormElement {
+function createSearchForm(options: HeaderOptions): Header['search'] {
   const form = createForm('search-form');
   const input = createInput('q', options.query, 'text');
   input.className = 'search-form__input';
   input.placeholder = 'Search games...';
-  form.append(input);
-
-  for (const name of ['ordering', 'genres'] as const) {
-    if (options[name]) form.append(createInput(name, options[name]));
-  }
-  if (options.showSearchButton) {
-    const button = Object.assign(document.createElement('button'), {
-      type: 'submit', className: 'search-form__button', textContent: 'Search',
-    });
-    form.append(button);
-  }
-  return form;
+  const ordering = createInput('ordering', options.ordering);
+  const genres = createInput('genres', options.genres);
+  const button = Object.assign(document.createElement('button'), {
+    type: 'submit', className: 'search-form__button', textContent: 'Search',
+  });
+  form.append(input, ordering, genres, button);
+  return { form, input, button, ordering, genres };
 }
 
-function createFiltersForm(options: HeaderOptions): HTMLFormElement {
+function createFiltersForm(options: HeaderOptions): Header['filters'] {
   const form = createForm('filters-form');
-  form.append(
-    createInput('q', options.query),
-    createSelect('ordering', options.ordering, ORDERING_OPTIONS),
-    createSelect('genres', options.genres, GENRE_OPTIONS),
-  );
-  return form;
+  const query = createInput('q', options.query);
+  const ordering = createSelect('ordering', options.ordering, ORDERING_OPTIONS);
+  const genres = createSelect('genres', options.genres, GENRE_OPTIONS);
+  form.append(query, ordering, genres);
+  return { form, query, ordering, genres };
 }
 
 function createForm(className: string): HTMLFormElement {
@@ -143,7 +135,11 @@ function createSelect(name: string, value: string, choices: Record<string, strin
   for (const [optionValue, label] of Object.entries(choices)) {
     select.add(new Option(label, optionValue));
   }
+  setSelectValue(select, value);
+  return select;
+}
+
+function setSelectValue(select: HTMLSelectElement, value: string): void {
   select.value = value;
   if (select.selectedIndex === -1) select.selectedIndex = 0;
-  return select;
 }

@@ -1,16 +1,10 @@
 import { mountHeader } from './components/header';
 import { startRouter, type Route } from './shared/router';
 
-let started = false;
-
 export function startApp(routes: Route[]): void {
-  if (started) return;
+  const root = document.querySelector<HTMLElement>('#app')!;
+  const headerRoot = document.querySelector<HTMLElement>('#header-root')!;
 
-  const root = document.querySelector<HTMLElement>('#app');
-  const headerRoot = document.querySelector<HTMLElement>('#header-root');
-  if (!root || !headerRoot) return;
-
-  started = true;
   const syncHeader = mountHeader(headerRoot);
 
   Promise.resolve().then(() => startRouter({
