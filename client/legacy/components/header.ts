@@ -1,6 +1,7 @@
 import type { User } from '../shared/types';
 import { createAccount } from '../shared/createAccount';
-import { createLink } from '../shared/createLink';
+import navigate, { createLink, paths, type Route } from '../shared/router';
+import { getCurrentUser } from '../shared/getCurrentUser';
 import { GENRE_OPTIONS, ORDERING_OPTIONS } from '../shared/gameFilters';
 
 type HeaderOptions = {
@@ -24,7 +25,7 @@ export function createHeader(options: HeaderOptions, dependencies: HeaderDepende
 
   const navigation = Object.assign(document.createElement('div'), { className: 'header__right' });
   const account = createAccount(dependencies.getCurrentUser);
-  navigation.append(createLink('/favorites', 'Favorites'), account);
+  navigation.append(createLink(paths.favorites, 'Favorites'), account);
 
   const searchForm = createSearchForm(options);
   const filtersForm = options.showFilters ? createFiltersForm(options) : null;
@@ -32,8 +33,72 @@ export function createHeader(options: HeaderOptions, dependencies: HeaderDepende
   searchControls.append(searchForm);
   if (filtersForm) searchControls.append(filtersForm);
 
-  element.append(createLink('/', 'RAWG Games'), navigation, searchControls);
+  element.append(createLink(paths.games(), 'RAWG Games'), navigation, searchControls);
   return { element, searchForm, filtersForm };
+}
+
+export function mountHeader(root: HTMLElement): (route: Route | undefined) => void {
+  const params = new URLSearchParams(location.search);
+  const header = createHeader({
+    query: params.get('q') ?? '',
+    ordering: params.get('ordering') ?? '',
+    genres: params.get('genres') ?? '',
+    showFilters: true,
+    showSearchButton: true,
+  }, { getCurrentUser });
+  root.replaceChildren(header.element);
+
+  const searchInput = header.searchForm.querySelector<HTMLInputElement>('input[name="q"]');
+  const searchButton = header.searchForm.querySelector<HTMLButtonElement>('button[type="submit"]');
+  const orderingSelect = header.filtersForm?.querySelector<HTMLSelectElement>('select[name="ordering"]');
+  const genresSelect = header.filtersForm?.querySelector<HTMLSelectElement>('select[name="genres"]');
+  let searchTimer: ReturnType<typeof setTimeout> | undefined;
+
+  function navigateToGames(): void {
+    navigate(paths.games({
+      query: searchInput?.value,
+      ordering: orderingSelect?.value,
+      genres: genresSelect?.value,
+    }));
+  }
+
+  header.searchForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    navigateToGames();
+  });
+
+  searchInput?.addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    if (location.pathname === paths.games()) {
+      searchTimer = setTimeout(navigateToGames, 300);
+    }
+  });
+
+  header.filtersForm?.addEventListener('change', navigateToGames);
+  header.filtersForm?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    navigateToGames();
+  });
+
+  return (route) => {
+    clearTimeout(searchTimer);
+    const params = new URLSearchParams(location.search);
+
+    for (const form of [header.searchForm, header.filtersForm]) {
+      for (const name of ['q', 'ordering', 'genres']) {
+        const control = form?.elements.namedItem(name);
+        if (control instanceof HTMLInputElement || control instanceof HTMLSelectElement) {
+          control.value = params.get(name) ?? '';
+          if (control instanceof HTMLSelectElement && control.selectedIndex === -1) {
+            control.selectedIndex = 0;
+          }
+        }
+      }
+    }
+
+    if (header.filtersForm) header.filtersForm.style.display = route?.showFilters ? '' : 'none';
+    if (searchButton) searchButton.hidden = !route?.showSearchButton;
+  };
 }
 
 function createSearchForm(options: HeaderOptions): HTMLFormElement {
@@ -66,7 +131,7 @@ function createFiltersForm(options: HeaderOptions): HTMLFormElement {
 }
 
 function createForm(className: string): HTMLFormElement {
-  return Object.assign(document.createElement('form'), { className, action: '/', method: 'GET' });
+  return Object.assign(document.createElement('form'), { className, action: paths.games(), method: 'GET' });
 }
 
 function createInput(name: string, value: string, type = 'hidden'): HTMLInputElement {

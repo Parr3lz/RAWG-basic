@@ -1,6 +1,6 @@
 import { requestJson } from '../shared/api';
 import { createGameCard } from '../shared/createGameCard';
-import { createLink } from '../shared/createLink';
+import { createLink, paths } from '../shared/router';
 import { showToast } from '../shared/showToast';
 import type { Game, GamesPage } from '../shared/types';
 
@@ -25,18 +25,13 @@ export function gamesListPage(element: HTMLElement): () => void {
     gamesList.replaceChildren(fragment);
   }
 
-  function buildListUrl(page: number, query: string, ordering: string, genres: string) {
-    const next = new URLSearchParams();
-    if (query) next.set('q', query);
-    if (ordering) next.set('ordering', ordering);
-    if (genres) next.set('genres', genres);
-    if (page > 1) next.set('page', String(page));
-    const qs = next.toString();
-    return qs ? `/?${qs}` : '/';
-  }
-
   function createPaginationLink(label: string, page: number, data: GamesPage) {
-    return createLink(buildListUrl(page, data.query, data.ordering, data.genres), label);
+    return createLink(paths.games({
+      page,
+      query: data.query,
+      ordering: data.ordering,
+      genres: data.genres,
+    }), label);
   }
 
   function renderPagination(data: GamesPage) {

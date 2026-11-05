@@ -1,4 +1,4 @@
-import { createLink } from './createLink';
+import { createLink, paths } from './router';
 import type { User } from './types';
 
 export function createAccount(getCurrentUser: () => Promise<User | null>): HTMLElement {
@@ -9,7 +9,7 @@ export function createAccount(getCurrentUser: () => Promise<User | null>): HTMLE
   function renderUser(user: User | null): void {
     account.replaceChildren();
     if (!user) {
-      account.append(createLink('/auth/discord/login', 'Login'));
+      account.append(createLink(paths.login, 'Login'));
       return;
     }
     if (user.avatar) {
@@ -20,7 +20,7 @@ export function createAccount(getCurrentUser: () => Promise<User | null>): HTMLE
     }
     account.append(
       Object.assign(document.createElement('span'), { className: 'account__username', textContent: user.username }),
-      createLink('/auth/logout', 'Logout'),
+      createLink(paths.logout, 'Logout'),
     );
   }
 

@@ -1,5 +1,6 @@
 import { ApiError, requestJson } from '../shared/api';
 import { createGameCard } from '../shared/createGameCard';
+import { paths } from '../shared/router';
 import type { Game } from '../shared/types';
 
 export function favoritesPage(element: HTMLElement): () => void {
@@ -19,7 +20,7 @@ export function favoritesPage(element: HTMLElement): () => void {
     } catch (error) {
       if (signal.aborted) return;
       if (error instanceof ApiError && error.status === 401) {
-        location.assign('/auth/discord/login');
+        location.assign(paths.login);
         return;
       }
       console.error('Не удалось загрузить Favorites:', error);

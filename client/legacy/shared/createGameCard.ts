@@ -1,12 +1,12 @@
 import { rawgImage } from './rawgImage';
+import { createLink, paths } from './router';
 import type { Game } from './types';
 
 export function createGameCard(game: Game, className = 'game-card') {
   const card = document.createElement('li');
   card.className = className;
 
-  const link = document.createElement('a');
-  link.href = `/games/${encodeURIComponent(String(game.id))}`;
+  const link = createLink(paths.game(game.id), '');
 
   if (game.background_image) {
     const image = document.createElement('img');
